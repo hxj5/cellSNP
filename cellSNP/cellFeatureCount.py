@@ -13,8 +13,8 @@ import multiprocessing
 from optparse import OptionParser, OptionGroup
 
 from .version import __version__
-from .utils.gtf_utils import load_genes
-from .utils.count_utils import feature_count, bed2reg, chr2reg
+from .utils.count_utils import feature_count
+from .utils.region_utils import load_regions
 
 FID = None
 PROCESSED = 0
@@ -53,9 +53,9 @@ def main():
     parser.add_option("--regFile", "-r", dest="reg_file", default=None,
         help=("Path to region file."))
     parser.add_option("--regType", "-T", dest="reg_type", default=None,
-        help=("Region type, one of bed|gff."))
-    parser.add_option("--binSize", "-B", type="int", dest="bin_size", default=50,
-        help=("Fixed size of bin in kb. it will be used when @p regFile or @p regType is not set [default: %default]"))
+        help=("Region type, one of bed|gff|tsv; " 
+              "tsv has 3 tab-delimed columns: <chr> <start> <end> "
+              "and both start and end 1-based and included."))
     
     group1 = OptionGroup(parser, "Optional arguments")
     group1.add_option("--nproc", "-p", type="int", dest="nproc", default=1,
@@ -104,48 +104,29 @@ def main():
         print("Error: No such directory for file\n -- %s" %out_dir)
         sys.exit(1)   
 
-    reg_file, reg_type = options.reg_file, options.reg_type
-    if not reg_file or not os.path.isfile(reg_file) or not reg_type or reg_type.lower() not in ("bed", "gff"):
-        reg_file = None
-        reg_type = None
+    reg_file, reg_type = options.reg_file, options.reg_type 
+    if not reg_file or not reg_type:
+        print("Error: both region file and region type should be provided!")
+        sys.exit(1)
+    elif not os.path.isfile(reg_file):
+        print("Error: region file not exist: %s" % reg_file)
+        sys.exit(1)
+    elif reg_type.lower() not in ("bed", "gff", "tsv"):
+        print("Error: region type should be one of bed|gff|tsv.")
+        sys.exit(1)
     else:
-        options.bin_size = None
         reg_type = reg_type.lower()
 
-    if reg_file is None and (not options.bin_size or options.bin_size <= 0):
-        print("Error: either region file or a positive bin_size should be provided!")
-        sys.exit(1)    
-    
     nproc = options.nproc
     min_LEN = options.min_LEN
     min_MAPQ = options.min_MAPQ
     max_FLAG = options.max_FLAG
     
     # load regions
-    reg_list = None
-    if reg_file is not None:
-        if reg_type == "bed":
-            reg_list = bed2reg(reg_file)
-        elif reg_type == "gff":
-            reg_list = load_genes(reg_file, tranTag="", exonTag="")
-        else:   # should not come here!
-            print("Error: wrong region type!")
-            sys.exit(1)
-        if not reg_list:
-            print("Error: empty region file or failing to parse region file!")
-            sys.exit(1)
-    else:  # fixed-size regions/bins
-        sam_fp = pysam.AlignmentFile(options.sam_file, "r")   # file format auto-detected.
-        reg_list = []
-        target_chroms = [str(i) for i in range(1, 23)] + ["X", "Y"]
-        for chrom in target_chroms:
-            _regions = chr2reg(chrom, sam_fp, options.bin_size * 1000)
-            if _regions is None:
-                print("Error: cannot split chromsome %s to bins!" % chrom)
-                sam_fp.close()
-                sys.exit(1)
-            reg_list.extend(_regions)
-        sam_fp.close()
+    reg_list = load_regions(reg_file, reg_type)
+    if not reg_list:
+        print("Error: empty region file or failed to parse region file!")
+        sys.exit(1)
 
     reg_ids = [reg.id for reg in reg_list]
     feature_name = "gene" if reg_type == "gff" else "region"

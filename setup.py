@@ -51,7 +51,8 @@ setup(
     entry_points={
           'console_scripts': [
               'cellSNP = cellSNP.cellSNP:main',
-              'cf-count = cellSNP.cellFeatureCount:main'
+              'cf-count = cellSNP.cellFeatureCount:main',
+              'cellRegion = cellSNP.cellRegion:main'
               ],
           }, 
 
