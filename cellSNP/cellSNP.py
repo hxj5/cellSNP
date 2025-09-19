@@ -57,7 +57,9 @@ def main():
     group1.add_option("--nproc", "-p", type="int", dest="nproc", default=1,
         help="Number of subprocesses [default: %default]")
     group1.add_option("--chrom", dest="chrom_all", default=None, 
-        help="The chromosomes to use, comma separated [default: 1 to 22]")
+        help="The chromosomes to use, comma separated. "
+        "ALL_IN_BAM means using all chromosomes in BAM header "
+        "[default: 1 to 22]")
     group1.add_option("--cellTAG", dest="cell_tag", default="CB", 
         help="Tag for cell barcodes, turn off with None [default: %default]")
     group1.add_option("--UMItag", dest="UMI_tag", default="Auto", 
@@ -151,6 +153,10 @@ def main():
         region_file = None
         if options.chrom_all is None:
             chrom_all = [str(x) for x in range(1, 23)]
+        elif options.chrom_all == "ALL_IN_BAM":
+            sam = pysam.AlignmentFile(sam_file_list[0], "r")
+            chrom_all = list(sam.references)
+            sam.close()
         else:
             chrom_all = options.chrom_all.split(",")
         if barcodes is not None:

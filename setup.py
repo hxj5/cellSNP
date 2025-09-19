@@ -16,6 +16,8 @@ from pysam import get_include as pysam_get_include
 from sys import version_info as sys_version
 from sysconfig import get_config_var as get_sysconfig_var
 
+
+
 here = path.abspath(path.dirname(__file__))
 
 # Set __version__ for the project.
@@ -26,6 +28,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
     
 reqs = ['numpy>=1.9.0', 'pysam>=0.15.2', 'cython>=0.29.16'] #, 'h5py'
+
 
 def get_py_suffix():
     """ Return the sysconfig suffix of the python extensions. e.g. .cpython-38-x86_64-linux-gnu.so """
@@ -40,11 +43,13 @@ def get_ext_name(name):
     """
     return path.splitext("%s%s" % (name, get_py_suffix()))[0]
 
+
 # refer to the setup.py in pysam.
 extra_compile_args = [
     "-Wno-unused",
     "-Wno-sign-compare",
 ]
+
 
 # List cython extensions in order.
 # pileup_utils and pileup_regions depend on cellsnp_utils.
@@ -71,6 +76,7 @@ ext_modules = [
         libraries = [])
 ]
 
+
 _s2l = lambda x: x if type(x) == list else [x]
 pysam_dir_list = _s2l(pysam_get_include())
 pysam_root_dir = pysam_dir_list[0]   # Fixme, check if the root dir of pysam.
@@ -82,8 +88,10 @@ ext_module_common_options = dict(
     library_dirs = pysam_dir_list
 )
 
+
 for module in ext_modules:
     module.update(**ext_module_common_options)
+
 
 setup(
     name='cellSNP',
@@ -132,7 +140,8 @@ setup(
     ext_modules = cythonize([Extension(**opts) for opts in ext_modules], language_level = sys_version.major),
 
     # Setting 'use_2to3 = True' to provide a facility to invoke 2to3 on the code as a part of the build process.
-    use_2to3 = True
+    # UPDATE-250919: new version of setuptools complains "error in cellSNP setup command: use_2to3 is invalid."
+    #use_2to3 = True
 
     # buid the distribution: python setup.py sdist
     # upload to pypi: twine upload dist/...
