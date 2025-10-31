@@ -33,15 +33,18 @@ with higher speed and less memory usage.
 
 News
 ----
-We recommend cellsnp-lite_ instead of cellSNP if you would like to use mode 2. For now, 
-cellSNP mode 2 uses pileup() function of pysam, which would filter duplicates and orphan reads 
-by default and may lead to unexpected coverage reduction in some cases. Compared to cellSNP, 
-cellsnp-lite provides a more flexible reads filtering for mode 2 so you could tune the filtering
-parameters on your demand.
+We recommend cellsnp-lite_ instead of cellSNP if you would like to use mode 2. 
+For now, cellSNP mode 2 uses ``pileup()`` function of pysam, 
+which could lead to unexpected coverage reduction in some cases, 
+though the ``max_depth`` and ``flag_filter`` parameters have been relaxed. 
+Compared to cellSNP, cellsnp-lite provides a more flexible reads filtering 
+for mode 2 so you could tune the filtering parameters on your demand.
 
-We have turn off the PCR duplicate filtering by default (--maxFLAG), as it is not well flagged in 
-CellRanger, hence may result in loss of a substantial fraction of SNPs. Please use v0.3.1 or setting 
---maxFLAG to large number. Credits to issue13_.
+We have turn off the PCR duplicate filtering by default (--maxFLAG), 
+as it is not well flagged in CellRanger, 
+hence may result in loss of a substantial fraction of SNPs. 
+Please use v0.3.1 or setting --maxFLAG to large number. 
+Credits to issue13_.
 
 All release notes can be found in `doc/release.rst`_.
 

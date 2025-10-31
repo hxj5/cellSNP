@@ -100,7 +100,11 @@ def pileup_regions(samFile, barcodes, out_file=None, chrom=None, cell_tag="CR",
     
     POS_CNT = 0
     vcf_lines_all = []
-    for pileupcolumn in samFile.pileup(contig=chrom):
+    for pileupcolumn in samFile.pileup(
+        contig = chrom,
+        max_depth = 2**31-1,
+        flag_filter = 772        # filter UNMAP, SECONDARY, and QCFAIL.
+    ):
         POS_CNT += 1
         if verbose and POS_CNT % 1000000 == 0:
             print("%s: %dM positions processed." %(chrom, POS_CNT/1000000))
